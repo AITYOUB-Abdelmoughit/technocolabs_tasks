@@ -1,0 +1,83 @@
+#***********************Data Cleaning*******************************
+#Q1:
+sf_permits.head(5)
+
+#Q2
+percent_missing = (sf_permits.isnull().sum().sum()/np.product(sf_permits.shape))*100
+
+#Q3
+all addresses not have all a street number suffix ==> missed values doesn't exist ,but have a Zipcode ==>missed valued in this column were not recorded
+
+#Q4
+newDataset=sf_permits.dropna()
+newDataset.head()
+
+#Q5
+sf_permits_with_na_dropped = sf_permits.dropna(axis=1)
+dropped_columns = sf_permits.shape[1]-sf_permits_with_na_dropped.shape[1]
+
+#Q6
+sf_permits_with_na_imputed = sf_permits.fillna(method='bfill',axis=0).fillna(0)
+
+
+#***********************Scaling and Normalizing*******************************
+
+#Q1
+scaled_goal_data = minmax_scaling(original_goal_data,columns=['goal'])
+
+#Q2
+index_of_positive_pledges = kickstarters_2017.pledged> 0
+positive_pledges = kickstarters_2017.pledged.loc[index_of_positive_pledges]
+normalized_pledges = pd.Series(stats.boxcox(positive_pledges)[0],name='pledged', index=positive_pledges.index)
+
+#******************************Parsing Dates***********************************
+
+#Q1
+earthquakes['Date'].dtype
+
+#Q2
+earthquakes.loc[3378, "Date"] = "02/23/1975"
+earthquakes.loc[7512, "Date"] = "04/28/1985"
+earthquakes.loc[20650, "Date"] = "03/13/2011"
+earthquakes['date_parsed'] = pd.to_datetime(earthquakes['Date'], format="%m/%d/%Y")
+
+#Q3
+day_of_month_earthquakes = earthquakes['date_parsed'].dt.day
+
+#Q4
+sns.distplot(day_of_month_earthquakes, kde=False, bins=31)
+
+#********************************Character Encodings************************************
+
+#Q1
+new_entry = sample_entry.decode("big5-tw").encode("utf-8",errors="replace")
+
+#Q2
+with open("../input/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv",'rb') as file:
+    encoding=chardet.detect(file.read())
+    print(encoding)
+#==> the output :{'encoding': 'Windows-1252', 'confidence': 0.73, 'language': ''}
+#--> using 10000 first bytes only gives us a wrong answer
+police_killings = pd.read_csv("../input/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv",encoding="Windows-1252")
+
+#Q3
+police_killings.to_csv("my_file.csv")
+
+
+#**************************Inconsistent Data Entry*******************************
+
+#Q1
+Graduated_from=professors["Graduated from"].unique()
+Graduated_from
+
+#Q2
+professors['Graduated from']=professors['Graduated from'].str.strip()
+
+#Q3
+professors['Country']=professors['Country'].str.lower()
+professors['Country']=professors['Country'].str.strip()
+countries=professors['Country'].unique()
+matches = fuzzywuzzy.process.extract("usa", countries, limit=10, scorer=fuzzywuzzy.fuzz.token_sort_ratio)
+matches #to show every entry and it's ratio in the same column.
+#to change the usofa to usa we have to call the function replace_matches_in_column with df=professors, column="Country", string_to_match="usa", min-ratio=75 
+replace_matches_in_column(df=professors, column="Country", string_to_match="usa", min_ratio = 75)
